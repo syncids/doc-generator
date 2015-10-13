@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Mime;
+using System.Reflection;
 using System.Web;
 using System.Web.Http;
 using RestSharp;
@@ -21,7 +22,7 @@ namespace SyncIDS.API.Controllers
             Render(firmName, clientNumber, matterNumber, filingIds, skipArt);
 
             var name = $"{firmName}-{clientNumber}-{matterNumber}";
-            var baseFolder = string.Format($"C:\\syncids\\{name}");
+            var baseFolder = $"{AssemblyDirectory}\\{name}";
             var filesFolder = $"{baseFolder}\\files";
 
             var fileName = $"{name}-PendingIDS.Zip";
@@ -82,6 +83,16 @@ namespace SyncIDS.API.Controllers
             request.AddParameter("ClientNumber", clientNumber);
             request.AddParameter("MatterNumber", matterNumber);
             client.Execute(request);
+        }
+        public static string AssemblyDirectory
+        {
+            get
+            {
+                var codeBase = Assembly.GetExecutingAssembly().CodeBase;
+                var uri = new UriBuilder(codeBase);
+                var path = Uri.UnescapeDataString(uri.Path);
+                return Path.GetDirectoryName(path);
+            }
         }
     }
 }
