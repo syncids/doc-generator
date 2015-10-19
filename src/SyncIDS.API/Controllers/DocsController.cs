@@ -41,24 +41,36 @@ namespace SyncIDS.API.Controllers
             ZipFile.ExtractToDirectory(downloadTarget, filesFolder);
             File.Delete(downloadTarget);
 
-            var blankForm = Directory.GetFiles(filesFolder, "Blank-*.pdf").First();
+            var blankForm = Directory.GetFiles(filesFolder, "Blank-*.pdf").FirstOrDefault();
 
-            var xmlFiles = Directory.GetFiles(filesFolder, "*.xml");
-            foreach (var xmlFile in xmlFiles)
+            if (blankForm != null)
             {
-                // for each xml file, create copy of blank form
-                // populate data on the blank form copy
-                var filedPdf = xmlFile.Replace(".xml", ".pdf");
-                File.Copy(blankForm, filedPdf);
-                using (var fs = new FileStream(filedPdf, FileMode.Open, FileAccess.ReadWrite))
+                var xmlFiles = Directory.GetFiles(filesFolder, "*.xml");
+                foreach (var xmlFile in xmlFiles)
                 {
-                    var pdfForm = new Aspose.Pdf.Facades.Form(fs);
-                    using (var xmlInput = new FileStream(xmlFile, FileMode.Open))
+                    // for each xml file, create copy of blank form
+                    // populate data on the blank form copy
+                    var filedPdf = xmlFile.Replace(".xml", ".pdf");
+                    File.Copy(blankForm, filedPdf);
+                    using (var fs = new FileStream(filedPdf, FileMode.Open, FileAccess.ReadWrite))
                     {
-                        pdfForm.ImportXml(xmlInput);
+                        var pdfForm = new Aspose.Pdf.Facades.Form(fs);
+                        using (var xmlInput = new FileStream(xmlFile, FileMode.Open))
+                        {
+                            pdfForm.ImportXml(xmlInput);
+                        }
+                        pdfForm.Save(fs);
+                        File.Delete(xmlFile);
                     }
-                    pdfForm.Save(fs);
                 }
+
+                File.Delete(blankForm);
+            }
+
+            var form1449 = Directory.GetFiles(filesFolder, "*1449.pdf").FirstOrDefault();
+            if (form1449 != null)
+            {
+                File.Delete(form1449);
             }
 
             ZipFile.CreateFromDirectory(filesFolder, resultingFileName);
